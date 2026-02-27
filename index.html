@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Paris Hilton Magic 8 Ball ✨</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --pink-hot: #FF69B4;
+            --pink-deep: #FF1493;
+            --pink-light: #FFB6C1;
+            --pink-neon: #FF6EC7;
+            --gold: #FFD700;
+            --gold-dark: #DAA520;
+            --black: #0a0a0a;
+            --purple: #9B59B6;
+        }
+
+        body {
+            background: var(--black);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Sparkle background */
+        .bg-sparkles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: sparkle-float linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes sparkle-float {
+            0% { opacity: 0; transform: translateY(100vh) scale(0); }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+        }
+
+        /* Title */
+        .title-area {
+            text-align: center;
+            z-index: 2;
+            margin-bottom: 20px;
+        }
+
+        .title-area h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--pink-hot), var(--gold), var(--pink-deep));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .title-area .subtitle {
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+            color: var(--pink-light);
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* 8 Ball Container */
+        .ball-container {
+            position: relative;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .eight-ball {
+            width: clamp(260px, 70vw, 340px);
+            height: clamp(260px, 70vw, 340px);
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #444, #111 50%, #000 100%);
+            position: relative;
+            box-shadow:
+                0 0 60px rgba(255, 105, 180, 0.3),
+                0 0 120px rgba(255, 105, 180, 0.1),
+                inset 0 -20px 60px rgba(0,0,0,0.8),
+                inset 0 10px 30px rgba(255,255,255,0.05);
+            transition: transform 0.1s ease;
+        }
+
+        .eight-ball.shaking {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            10% { transform: rotate(-8deg) scale(1.02); }
+            20% { transform: rotate(8deg) scale(0.98); }
+            30% { transform: rotate(-6deg) scale(1.01); }
+            40% { transform: rotate(6deg) scale(0.99); }
+            50% { transform: rotate(-4deg); }
+            60% { transform: rotate(4deg); }
+            70% { transform: rotate(-2deg); }
+            80% { transform: rotate(2deg); }
+        }
+
+        /* The pink window on the 8 ball */
+        .window {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 55%;
+            height: 55%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%,
+                rgba(255, 105, 180, 0.15),
+                rgba(20, 0, 20, 0.95) 70%);
+            border: 3px solid rgba(255, 105, 180, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow:
+                inset 0 0 30px rgba(255, 105, 180, 0.2),
+                0 0 20px rgba(255, 105, 180, 0.15);
+        }
+
+        /* The triangle/answer area */
+        .answer-area {
+            text-align: center;
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            width: 100%;
+        }
+
+        .answer-area.visible {
+            opacity: 1;
+        }
+
+        .answer-area.thinking {
+            opacity: 1;
+        }
+
+        .answer-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(0.65rem, 2.5vw, 0.85rem);
+            font-weight: 700;
+            color: var(--pink-hot);
+            line-height: 1.3;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .thinking-dots {
+            display: none;
+        }
+
+        .answer-area.thinking .thinking-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .answer-area.thinking .answer-text {
+            display: none;
+        }
+
+        .thinking-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--pink-hot);
+            border-radius: 50%;
+            animation: dot-pulse 1.4s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--pink-hot);
+        }
+
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-pulse {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 8 label */
+        .eight-label {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 8vw, 3rem);
+            font-weight: 900;
+            color: var(--pink-hot);
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+            opacity: 0.9;
+        }
+
+        /* Shine effect on ball */
+        .shine {
+            position: absolute;
+            top: 8%;
+            left: 18%;
+            width: 25%;
+            height: 15%;
+            background: radial-gradient(ellipse, rgba(255,255,255,0.15), transparent);
+            border-radius: 50%;
+            transform: rotate(-30deg);
+            pointer-events: none;
+        }
+
+        /* Instructions */
+        .instructions {
+            z-index: 2;
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .instructions p {
+            font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+            color: var(--pink-light);
+            font-weight: 300;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        .instructions .shake-icon {
+            display: inline-block;
+            animation: wiggle 2s ease-in-out infinite;
+            font-size: 1.2em;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+
+        /* Enable button for iOS */
+        .enable-btn {
+            z-index: 10;
+            background: linear-gradient(135deg, var(--pink-deep), var(--purple));
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 0 30px rgba(255, 20, 147, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .enable-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(255, 20, 147, 0.6);
+        }
+
+        .enable-btn:active {
+            transform: scale(0.98);
+        }
+
+        .enable-btn.hidden {
+            display: none;
+        }
+
+        /* Response counter */
+        .counter {
+            position: fixed;
+            bottom: 12px;
+            right: 16px;
+            font-size: 0.65rem;
+            color: rgba(255, 105, 180, 0.3);
+            z-index: 2;
+            letter-spacing: 1px;
+        }
+
+        /* Flash effect on shake */
+        .flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 105, 180, 0.3), transparent);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .flash-overlay.active {
+            opacity: 1;
+        }
+
+        /* Pink glow pulse on ball when active */
+        .eight-ball.active-glow {
+            box-shadow:
+                0 0 80px rgba(255, 105, 180, 0.5),
+                0 0 160px rgba(255, 105, 180, 0.2),
+                inset 0 -20px 60px rgba(0,0,0,0.8),
+                inset 0 10px 30px rgba(255,255,255,0.05);
+        }
+
+        /* Branding */
+        .branding {
+            position: fixed;
+            bottom: 12px;
+            left: 16px;
+            font-size: 0.6rem;
+            color: rgba(255, 105, 180, 0.25);
+            z-index: 2;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-sparkles" id="sparkles"></div>
+    <div class="flash-overlay" id="flash"></div>
+
+    <div class="title-area">
+        <h1>Paris Hilton</h1>
+        <div class="subtitle">Magic 8 Ball</div>
+    </div>
+
+    <div class="ball-container" id="ballContainer">
+        <div class="eight-ball" id="eightBall">
+            <div class="eight-label">8</div>
+            <div class="shine"></div>
+            <div class="window">
+                <div class="answer-area" id="answerArea">
+                    <div class="thinking-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="answer-text" id="answerText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions" id="instructions">
+        <p><span class="shake-icon">📱</span> Shake your phone or tap the ball</p>
+    </div>
+
+    <button class="enable-btn hidden" id="enableBtn">
+        Tap to Enable Shake ✨
+    </button>
+
+    <div class="branding">That's Hot</div>
+    <div class="counter" id="counter">1000 responses</div>
+
+    <script src="responses.js"></script>
+    <script>
+        const eightBall = document.getElementById('eightBall');
+        const answerArea = document.getElementById('answerArea');
+        const answerText = document.getElementById('answerText');
+        const flash = document.getElementById('flash');
+        const enableBtn = document.getElementById('enableBtn');
+        const ballContainer = document.getElementById('ballContainer');
+        const instructions = document.getElementById('instructions');
+
+        let isAnimating = false;
+        let shakeEnabled = false;
+        let lastShakeTime = 0;
+        const SHAKE_THRESHOLD = 25;
+        const SHAKE_COOLDOWN = 2000;
+        let lastAccel = { x: 0, y: 0, z: 0 };
+
+        // Create sparkles
+        function createSparkles() {
+            const container = document.getElementById('sparkles');
+            for (let i = 0; i < 50; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.animationDuration = (4 + Math.random() * 8) + 's';
+                sparkle.style.animationDelay = Math.random() * 10 + 's';
+                sparkle.style.width = sparkle.style.height = (2 + Math.random() * 4) + 'px';
+                const colors = ['#FFD700', '#FF69B4', '#FF1493', '#FFB6C1', '#fff'];
+                sparkle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(sparkle);
+            }
+        }
+        createSparkles();
+
+        // Get random response
+        let lastResponseIndex = -1;
+        function getRandomResponse() {
+            let idx;
+            do {
+                idx = Math.floor(Math.random() * PARIS_RESPONSES.length);
+            } while (idx === lastResponseIndex && PARIS_RESPONSES.length > 1);
+            lastResponseIndex = idx;
+            return PARIS_RESPONSES[idx];
+        }
+
+        // Activate the 8 ball
+        function activate() {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            // Shake animation
+            eightBall.classList.add('shaking');
+            eightBall.classList.add('active-glow');
+
+            // Flash
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 300);
+
+            // Show thinking
+            answerArea.classList.remove('visible');
+            answerArea.classList.add('thinking');
+
+            // Vibrate if available
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 30, 50]);
+            }
+
+            // Hide instructions after first use
+            instructions.style.opacity = '0';
+            instructions.style.transition = 'opacity 0.5s ease';
+
+            setTimeout(() => {
+                eightBall.classList.remove('shaking');
+
+                // Show answer
+                const response = getRandomResponse();
+                answerText.textContent = response;
+                answerArea.classList.remove('thinking');
+                answerArea.classList.add('visible');
+
+                setTimeout(() => {
+                    eightBall.classList.remove('active-glow');
+                    isAnimating = false;
+                }, 500);
+            }, 1500);
+        }
+
+        // Tap to activate
+        ballContainer.addEventListener('click', activate);
+
+        // Shake detection
+        function handleMotion(e) {
+            const acc = e.accelerationIncludingGravity;
+            if (!acc || acc.x === null) return;
+
+            const delta = Math.abs(acc.x - lastAccel.x) +
+                          Math.abs(acc.y - lastAccel.y) +
+                          Math.abs(acc.z - lastAccel.z);
+
+            lastAccel = { x: acc.x, y: acc.y, z: acc.z };
+
+            const now = Date.now();
+            if (delta > SHAKE_THRESHOLD && (now - lastShakeTime) > SHAKE_COOLDOWN) {
+                lastShakeTime = now;
+                activate();
+            }
+        }
+
+        // iOS 13+ requires permission request from user gesture
+        function requestMotionPermission() {
+            if (typeof DeviceMotionEvent !== 'undefined' &&
+                typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission()
+                    .then(state => {
+                        if (state === 'granted') {
+                            window.addEventListener('devicemotion', handleMotion);
+                            shakeEnabled = true;
+                            enableBtn.classList.add('hidden');
+                        }
+                    })
+                    .catch(console.error);
+            }
+        }
+
+        // Setup shake detection
+        function setupShake() {
+            if (typeof DeviceMotionEvent !== 'undefined') {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    // iOS 13+ - need button tap to request
+                    enableBtn.classList.remove('hidden');
+                    enableBtn.addEventListener('click', () => {
+                        requestMotionPermission();
+                    });
+                } else {
+                    // Android / older iOS
+                    window.addEventListener('devicemotion', handleMotion);
+                    shakeEnabled = true;
+                }
+            }
+        }
+
+        setupShake();
+
+        // Keyboard support (spacebar)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                activate();
+            }
+        });
+    </script>
+</body>
+</html>
