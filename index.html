@@ -126,40 +126,8 @@
                 0 0 120px rgba(255, 105, 180, 0.1),
                 inset 0 -20px 60px rgba(0,0,0,0.8),
                 inset 0 10px 30px rgba(255,255,255,0.05);
-            animation: ball-idle 4s ease-in-out infinite;
-        }
-
-        @keyframes ball-idle {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-                box-shadow:
-                    0 0 60px rgba(255, 105, 180, 0.3),
-                    0 0 120px rgba(255, 105, 180, 0.1),
-                    inset 0 -20px 60px rgba(0,0,0,0.8),
-                    inset 0 10px 30px rgba(255,255,255,0.05);
-            }
-            25% {
-                transform: translateY(-12px) rotate(1.5deg);
-            }
-            50% {
-                transform: translateY(0px) rotate(0deg);
-                box-shadow:
-                    0 0 90px rgba(255, 105, 180, 0.5),
-                    0 0 160px rgba(255, 105, 180, 0.2),
-                    inset 0 -20px 60px rgba(0,0,0,0.8),
-                    inset 0 10px 30px rgba(255,255,255,0.05);
-            }
-            75% {
-                transform: translateY(-12px) rotate(-1.5deg);
-            }
-            100% {
-                transform: translateY(0px) rotate(0deg);
-                box-shadow:
-                    0 0 60px rgba(255, 105, 180, 0.3),
-                    0 0 120px rgba(255, 105, 180, 0.1),
-                    inset 0 -20px 60px rgba(0,0,0,0.8),
-                    inset 0 10px 30px rgba(255,255,255,0.05);
-            }
+            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+            will-change: transform;
         }
 
         .eight-ball.shaking {
@@ -480,9 +448,7 @@
             if (isAnimating) return;
             isAnimating = true;
 
-            // Pause idle animation, play shake
-            eightBall.style.animation = 'none';
-            void eightBall.offsetHeight;
+            // Shake animation
             eightBall.classList.add('shaking');
             eightBall.classList.add('active-glow');
 
@@ -505,6 +471,7 @@
 
             setTimeout(() => {
                 eightBall.classList.remove('shaking');
+                resetBallPosition();
 
                 // Show answer
                 const response = getRandomResponse();
@@ -514,8 +481,6 @@
 
                 setTimeout(() => {
                     eightBall.classList.remove('active-glow');
-                    // Resume idle animation
-                    eightBall.style.animation = '';
                     isAnimating = false;
                 }, 500);
             }, 1500);
@@ -524,11 +489,38 @@
         // Tap to activate
         ballContainer.addEventListener('click', activate);
 
-        // Shake detection
+        // Real-time ball movement from accelerometer
+        let tiltX = 0, tiltY = 0;
+        let resetTimeout = null;
+
+        function updateBallPosition() {
+            if (!isAnimating) {
+                eightBall.style.transform = `translate(${tiltX}px, ${tiltY}px) rotate(${tiltX * 0.5}deg)`;
+            }
+        }
+
+        function resetBallPosition() {
+            tiltX = 0;
+            tiltY = 0;
+            eightBall.style.transform = 'translate(0, 0) rotate(0deg)';
+        }
+
+        // Shake detection + real-time wobble
         function handleMotion(e) {
             const acc = e.accelerationIncludingGravity;
             if (!acc || acc.x === null) return;
 
+            // Real-time wobble — move ball with phone tilt
+            const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+            tiltX = clamp(acc.x * 3, -40, 40);
+            tiltY = clamp(-acc.y * 2, -30, 30);
+            updateBallPosition();
+
+            // Reset ball position after motion stops
+            clearTimeout(resetTimeout);
+            resetTimeout = setTimeout(resetBallPosition, 300);
+
+            // Detect shake to trigger answer
             const delta = Math.abs(acc.x - lastAccel.x) +
                           Math.abs(acc.y - lastAccel.y) +
                           Math.abs(acc.z - lastAccel.z);
